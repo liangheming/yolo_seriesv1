@@ -153,10 +153,10 @@ class COCODataSets(Dataset):
         img_path, label = self.img_paths[item], self.labels[item]
         img = cv.imread(img_path)
         img, label = self.transform(img, label)
-        if self.debug:
-            import uuid
-            ret_img = draw_box(img, label, colors, coco_names)
-            cv.imwrite("{:d}_{:s}.jpg".format(item, str(uuid.uuid4()).replace('-', "")), ret_img)
+        # if self.debug:
+        #     import uuid
+        #     ret_img = draw_box(img, label, colors, coco_names)
+        #     cv.imwrite("{:d}_{:s}.jpg".format(item, str(uuid.uuid4()).replace('-', "")), ret_img)
         label_num = len(label)
         if label_num:
             # [weight,label,x1,y1,x2,y2]

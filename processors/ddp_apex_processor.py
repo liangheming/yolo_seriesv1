@@ -42,6 +42,7 @@ class COCODDPApexProcessor(object):
                                   img_size=self.data_cfg['img_size'],
                                   debug=self.data_cfg['debug'],
                                   augments=True,
+                                  use_crowd=self.data_cfg['use_crowd'],
                                   remove_blank=self.data_cfg['remove_blank']
                                   )
         self.tloader = DataLoader(dataset=self.tdata,
@@ -54,6 +55,7 @@ class COCODDPApexProcessor(object):
                                   img_size=self.data_cfg['img_size'],
                                   debug=self.data_cfg['debug'],
                                   augments=False,
+                                  use_crowd=self.data_cfg['use_crowd'],
                                   remove_blank=False
                                   )
         self.vloader = DataLoader(dataset=self.vdata,
