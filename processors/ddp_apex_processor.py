@@ -16,7 +16,7 @@ from commons.boxs_utils import clip_coords
 from commons.model_utils import rand_seed, is_parallel, ModelEMA, freeze_bn
 from metrics.map import coco_map
 from torch.nn.functional import interpolate
-from commons.optims_utils import WarmUpCosineDecayMultiStepLRAdjust, split_optimizer
+from commons.optims_utils import EpochWarmUpCosineDecayLRAdjust, split_optimizer
 
 rand_seed(1024)
 
@@ -95,13 +95,14 @@ class COCODDPApexProcessor(object):
         self.creterion = YOLOv5LossOriginal(
             iou_type=self.hyper_params['iou_type'],
         )
-        self.lr_adjuster = WarmUpCosineDecayMultiStepLRAdjust(init_lr=self.optim_cfg['lr'],
-                                                              milestones=self.optim_cfg['milestones'],
-                                                              warm_up_epoch=self.optim_cfg['warm_up_epoch'],
-                                                              iter_per_epoch=len(self.tloader),
-                                                              epochs=self.optim_cfg['epochs'],
-                                                              cosine_weights=self.optim_cfg['cosine_weights']
-                                                              )
+        self.lr_adjuster = EpochWarmUpCosineDecayLRAdjust(init_lr=self.optim_cfg['lr'],
+                                                          warm_up_epoch=self.optim_cfg['warm_up_epoch'],
+                                                          iter_per_epoch=len(self.tloader),
+                                                          epochs=self.optim_cfg['epochs'],
+                                                          alpha=self.optim_cfg['alpha'],
+                                                          gamma=self.optim_cfg['gamma'],
+                                                          bias_idx=2
+                                                          )
 
     def train(self, epoch):
         self.model.train()
@@ -112,7 +113,8 @@ class COCODDPApexProcessor(object):
         else:
             pbar = self.tloader
         loss_list = [list(), list(), list(), list()]
-        lr = 0
+        ulr = 0
+        dlr = 0
         match_num = 0
         for i, (img_tensor, targets_tensor, _) in enumerate(pbar):
             if len(self.hyper_params['multi_scale']) > 2:
@@ -131,10 +133,9 @@ class COCODDPApexProcessor(object):
                 total_loss, detail_loss, total_num = self.creterion(predicts, targets_tensor, anchors)
             self.scaler.scale(total_loss).backward()
             match_num += total_num
-            # nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.optim_cfg['max_norm'],
-            #                          norm_type=2)
             self.lr_adjuster(self.optimizer, i, epoch)
-            lr = self.optimizer.param_groups[0]['lr']
+            ulr = self.optimizer.param_groups[0]['lr']
+            dlr = self.optimizer.param_groups[2]['lr']
             self.scaler.step(self.optimizer)
             self.scaler.update()
             self.ema.update(self.model)
@@ -145,7 +146,7 @@ class COCODDPApexProcessor(object):
             loss_list[3].append(loss.item())
             if self.local_rank == 0:
                 pbar.set_description(
-                    "epoch:{:2d}|match_num:{:4d}|size:{:3d}|loss:{:6.4f}|loss_box:{:6.4f}|loss_obj:{:6.4f}|loss_cls:{:6.4f}|lr:{:8.6f}".format(
+                    "epoch:{:2d}|match_num:{:4d}|size:{:3d}|loss:{:6.4f}|loss_box:{:6.4f}|loss_obj:{:6.4f}|loss_cls:{:6.4f}|ulr:{:8.6f},dlr:{:8.6f}".format(
                         epoch + 1,
                         int(total_num),
                         h,
@@ -153,12 +154,13 @@ class COCODDPApexProcessor(object):
                         loss_box.item(),
                         loss_obj.item(),
                         loss_cls.item(),
-                        lr
+                        ulr,
+                        dlr
                     ))
         self.ema.update_attr(self.model)
         mean_loss_list = [np.array(item).mean() for item in loss_list]
         print(
-            "epoch:{:3d}|match_num:{:4d}|local:{:3d}|loss:{:6.4f}||loss_box:{:6.4f}|loss_obj:{:6.4f}|loss_cls:{:6.4f}|lr:{:8.6f}"
+            "epoch:{:3d}|match_num:{:4d}|local:{:3d}|loss:{:6.4f}||loss_box:{:6.4f}|loss_obj:{:6.4f}|loss_cls:{:6.4f}|ulr:{:8.6f}|dlr:{:8.6f}"
                 .format(epoch + 1,
                         match_num,
                         self.local_rank,
@@ -166,7 +168,9 @@ class COCODDPApexProcessor(object):
                         mean_loss_list[0],
                         mean_loss_list[1],
                         mean_loss_list[2],
-                        lr))
+                        ulr,
+                        dlr)
+        )
 
     @torch.no_grad()
     def val(self, epoch):

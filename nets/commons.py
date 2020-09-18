@@ -9,6 +9,7 @@ class CBR(nn.Module):
             padding = (kernel_size - 1) // 2
         self.conv = nn.Conv2d(in_channel, out_channel, kernel_size, stride, padding, groups=groups, bias=False)
         self.bn = nn.BatchNorm2d(out_channel)
+        # self.act = nn.LeakyReLU(0.1, inplace=True)
         self.act = nn.Hardswish()
 
     def forward(self, x):
@@ -54,7 +55,8 @@ class BottleNeckCSP(nn.Module):
         self.conv1_n = nn.Conv2d(inner_channel, inner_channel, 1, 1, bias=False)
         self.conv3 = CBR(2 * inner_channel, out_channel, 1, 1)
         self.bn = nn.BatchNorm2d(2 * inner_channel)
-        self.act = nn.LeakyReLU(0.1, inplace=True)
+        # self.act = nn.LeakyReLU(0.1, inplace=True)
+        self.act = nn.Hardswish()
         self.conv1_s = nn.Sequential(*[BottleNeck(inner_channel, inner_channel, shortcut, groups, expansion=1)
                                        for _ in range(blocks)])
 

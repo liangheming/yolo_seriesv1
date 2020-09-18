@@ -184,6 +184,7 @@ class COCODataSets(Dataset):
                             color_gitter=color_jitter,
                             target_size=self.img_size,
                             pad_val=self.aug_cfg['pad_val'],
+                            rand_center=True
                             )
             mix_up = MixUp(self.img_paths,
                            self.labels,
@@ -208,6 +209,7 @@ class COCODataSets(Dataset):
                                 color_gitter=mix_up,
                                 target_size=self.img_size,
                                 pad_val=self.aug_cfg['pad_val'],
+                                rand_center=True
                                 )
             aug_mixup = MixUp(self.img_paths,
                               self.labels,
@@ -218,8 +220,8 @@ class COCODataSets(Dataset):
 
             self.transform = Compose(transforms=[
                 OneOf(transforms=[
-                    (0.2, basic_transform),
-                    (0.8, mosaic),
+                    (0., basic_transform),
+                    (1., mosaic),
                     (0., mix_up),
                     (0., aug_mosaic),
                     (0., aug_mixup)
