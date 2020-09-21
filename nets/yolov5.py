@@ -1,7 +1,7 @@
 import math
 import torch
 from torch import nn
-from nets.commons import Focus, CBR, SPP, BottleNeckCSP
+from nets.commons import Focus, CBR, SPP, BottleNeckCSP, width_grow, depth_grow, model_scale
 
 default_anchors = [
     [10, 13, 16, 30, 33, 23],
@@ -9,31 +9,6 @@ default_anchors = [
     [116, 90, 156, 198, 373, 326],
 ]
 default_strides = [8., 16., 32.]
-
-
-def model_scale(name="s"):
-    name_dict = {
-        "s": (0.33, 0.50),
-        "m": (0.67, 0.75),
-        "l": (1.00, 1.00),
-        "x": (1.33, 1.25)
-    }
-    multiples = name_dict.get(name, None)
-    if multiples is None:
-        raise NotImplementedError("scale_name only support s,m,l,x")
-    return multiples
-
-
-def make_divisible(x, divisor):
-    return math.ceil(x / divisor) * divisor
-
-
-def depth_grow(x: int, depth_multiples: float):
-    return max(round(x * depth_multiples), 1) if x > 1 else x
-
-
-def width_grow(x, width_multiples):
-    return make_divisible(x * width_multiples, 8)
 
 
 class YOLOv5Backbone(nn.Module):
@@ -176,9 +151,9 @@ class YOLOv5(nn.Module):
 if __name__ == '__main__':
     input_tensor = torch.rand(size=(1, 3, 416, 416))
     net = YOLOv5(in_channel=3, scale_name='s')
-    # out, norm_anchors = net(input_tensor)
-    # for item in out:
-    #     print(item.shape)
+    out, norm_anchors = net(input_tensor)
+    for item in out:
+        print(item.shape)
     # print(norm_anchors)
     # print(norm_anchors.requires_grad)
     # with torch.no_grad():
