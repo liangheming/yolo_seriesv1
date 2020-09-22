@@ -8,7 +8,7 @@ from torch import nn
 from torch.cuda import amp
 from torch.utils.data.distributed import DistributedSampler
 from datasets.coco import COCODataSets
-from nets.yolov5 import YOLOv5
+from nets.yolov4 import YOLOv4
 from losses.yolov5_loss import YOLOv5LossOriginal
 from torch.utils.data.dataloader import DataLoader
 from utils.yolo_utils import non_max_suppression
@@ -21,7 +21,7 @@ from commons.optims_utils import EpochWarmUpCosineDecayLRAdjust, split_optimizer
 rand_seed(1024)
 
 
-class COCODDPApexProcessor(object):
+class COCODDPMixProcessor(object):
     def __init__(self, cfg_path):
         with open(cfg_path, 'r') as rf:
             self.cfg = yaml.safe_load(rf)
@@ -68,7 +68,7 @@ class COCODDPApexProcessor(object):
               "empty_data: ", self.tdata.empty_images_len)
         print("train_iter: ", len(self.tloader), " | ",
               "val_iter: ", len(self.vloader))
-        model = YOLOv5(num_cls=self.model_cfg['num_cls'],
+        model = YOLOv4(num_cls=self.model_cfg['num_cls'],
                        anchors=self.model_cfg['anchors'],
                        strides=self.model_cfg['strides'],
                        scale_name=self.model_cfg['scale_name'],

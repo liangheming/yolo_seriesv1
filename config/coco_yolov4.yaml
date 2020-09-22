@@ -1,13 +1,13 @@
-model_name: coco_yolov5
+model_name: coco_yolov4
 data:
   train_annotation_path: /home/huffman/data/annotations/instances_train2017.json
-#  train_annotation_path: /home/huffman/data/annotations/instances_val2017.json
+  #  train_annotation_path: /home/huffman/data/annotations/instances_val2017.json
   val_annotation_path: /home/huffman/data/annotations/instances_val2017.json
   train_img_root: /home/huffman/data/train2017
-#  train_img_root: /home/huffman/data/val2017
+  #  train_img_root: /home/huffman/data/val2017
   val_img_root: /home/huffman/data/val2017
-  img_size: 640
-  batch_size: 20
+  img_size: 672
+  batch_size: 32
   num_workers: 8
   debug: False
   remove_blank: False
@@ -15,16 +15,16 @@ data:
 
 model:
   num_cls: 80
-  anchors: [[10, 13, 16, 30, 33, 23],
-            [30, 61, 62, 45, 59, 119],
-            [116, 90, 156, 198, 373, 326]]
+  anchors: [[12, 16, 19, 36, 40, 28],
+            [36, 75, 76, 55, 72, 146],
+            [142, 110, 192, 243, 459, 401]]
   strides: [8, 16, 32]
-  scale_name: m
+  scale_name: s
   freeze_bn: False
 
 hyper_params:
   iou_type: ciou
-  multi_scale: [640]
+  multi_scale: [672]
 
 optim:
   optimizer: SGD
@@ -42,4 +42,4 @@ val:
   conf_thresh: 0.001
   iou_thresh: 0.6
   max_det: 300
-gpus: 4,5
+gpus: 6,7

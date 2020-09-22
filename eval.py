@@ -70,7 +70,9 @@ def gen_coco_predict(img_root="/home/huffman/data/val2017",
     model = YOLOv5().to(device)
     model.load_state_dict(weights)
     model.fuse().eval().half()
-    basic_transform = ScalePadding(target_size=(640, 640), minimum_rectangle=True)
+    basic_transform = ScalePadding(target_size=(640, 640),
+                                   minimum_rectangle=True,
+                                   padding_val=(103, 116, 123))
     coco = COCO(json_path)
     coco_predict_list = list()
     for img_id in tqdm(coco.imgs.keys()):
