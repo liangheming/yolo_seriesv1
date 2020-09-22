@@ -2,6 +2,7 @@ import math
 import torch
 from torch import nn
 from nets.commons import Focus, CBR, SPP, BottleNeckCSP, width_grow, depth_grow, model_scale
+from commons.model_utils import fuse_conv_and_bn
 
 default_anchors = [
     [10, 13, 16, 30, 33, 23],
@@ -146,6 +147,16 @@ class YOLOv5(nn.Module):
     def forward(self, x):
         x = self.head(self.neck(self.backbones(x)))
         return x
+
+    def fuse(self):  # fuse model Conv2d() + BatchNorm2d() layers
+        print('Fusing layers... ')
+        for m in self.modules():
+            if type(m) is CBR:
+                m._non_persistent_buffers_set = set()  # pytorch 1.6.0 compatability
+                m.conv = fuse_conv_and_bn(m.conv, m.bn)  # update conv
+                delattr(m, 'bn')  # remove batchnorm
+                m.forward = m.fuseforward  # update forward
+        return self
 
 
 if __name__ == '__main__':

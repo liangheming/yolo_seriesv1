@@ -164,16 +164,16 @@ class YOLOv4(nn.Module):
         return x
 
 
-# if __name__ == '__main__':
-#     input_tensor = torch.rand(size=(1, 3, 416, 416))
-#     net = YOLOv4(in_channel=3, scale_name='s')
-#     out, norm_anchors = net(input_tensor)
-#     for item in out:
-#         print(item.shape)
-#     print(norm_anchors)
-#     print(norm_anchors.requires_grad)
-#     with torch.no_grad():
-#         net.eval()
-#         out = net(input_tensor)
-#         print(out.shape)
-#         print(out.requires_grad)
+if __name__ == '__main__':
+    input_tensor = torch.rand(size=(1, 3, 416, 416))
+    net = YOLOv4(in_channel=3, scale_name='s')
+    out, norm_anchors = net(input_tensor)
+    for item in out:
+        print(item.shape)
+    print(norm_anchors)
+    print(norm_anchors.requires_grad)
+    with torch.no_grad():
+        net.eval()
+        out = net(input_tensor)
+        print(out.shape)
+        print(out.requires_grad)

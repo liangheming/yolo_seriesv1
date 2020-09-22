@@ -44,6 +44,9 @@ class CBR(nn.Module):
         x = self.act(x)
         return x
 
+    def fuseforward(self, x):
+        return self.act(self.conv(x))
+
 
 class Focus(nn.Module):
     def __init__(self, in_channel, out_channel, kernel=1, stride=1, padding=None, groups=1):
