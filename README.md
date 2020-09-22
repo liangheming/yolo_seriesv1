@@ -96,3 +96,7 @@ nohup python -m torch.distributed.launch --nproc_per_node=4 main.py >>train.log 
 - [ ] VOC data train\test scripts
 - [ ] custom data train\test scripts
 - [ ] MobileNet Backbone support
+
+## Reference
+1. ultralytics/yolov5 [https://github.com/ultralytics/yolov5](https://github.com/ultralytics/yolov5)
+2. WongKinYiu/PyTorch_YOLOv4 [https://github.com/WongKinYiu/PyTorch_YOLOv4](https://github.com/WongKinYiu/PyTorch_YOLOv4)
