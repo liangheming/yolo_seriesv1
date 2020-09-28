@@ -6,7 +6,7 @@ data:
   train_img_root: /home/huffman/data/train2017
   #  train_img_root: /home/huffman/data/val2017
   val_img_root: /home/huffman/data/val2017
-  img_size: 672
+  img_size: 640
   batch_size: 32
   num_workers: 8
   debug: False
@@ -15,16 +15,16 @@ data:
 
 model:
   num_cls: 80
-  anchors: [[12, 16, 19, 36, 40, 28],
-            [36, 75, 76, 55, 72, 146],
-            [142, 110, 192, 243, 459, 401]]
+  anchors: [[10, 13, 16, 30, 33, 23],
+            [30, 61, 62, 45, 59, 119],
+            [116, 90, 156, 198, 373, 326]]
   strides: [8, 16, 32]
   scale_name: s
   freeze_bn: False
 
 hyper_params:
   iou_type: ciou
-  multi_scale: [672]
+  multi_scale: [640]
 
 optim:
   optimizer: SGD
