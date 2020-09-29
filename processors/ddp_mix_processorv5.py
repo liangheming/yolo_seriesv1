@@ -13,7 +13,7 @@ from losses.yolov5_loss import YOLOv5LossOriginal
 from torch.utils.data.dataloader import DataLoader
 from utils.yolo_utils import non_max_suppression
 from commons.boxs_utils import clip_coords
-from commons.model_utils import rand_seed, is_parallel, ModelEMA, freeze_bn
+from commons.model_utils import rand_seed, ModelEMA, freeze_bn, reduce_sum
 from metrics.map import coco_map
 from torch.nn.functional import interpolate
 from commons.optims_utils import EpochWarmUpCosineDecayLRAdjust, split_optimizer
@@ -36,6 +36,7 @@ class COCODDPMixProcessor(object):
         print(self.hyper_params)
         print(self.val_cfg)
         os.environ['CUDA_VISIBLE_DEVICES'] = self.cfg['gpus']
+        self.gpu_num = len(str(self.cfg['gpus']).split(","))
         dist.init_process_group(backend='nccl')
         self.tdata = COCODataSets(img_root=self.data_cfg['train_img_root'],
                                   annotation_path=self.data_cfg['train_annotation_path'],
@@ -201,13 +202,18 @@ class COCODDPMixProcessor(object):
                 targets_sample = targets_tensor[targets_tensor[:, 0] == i][:, 2:]
                 target_list.append(targets_sample)
         mp, mr, map50, map = coco_map(predict_list, target_list)
-        print("epoch: {:2d}|local:{:d}|mp:{:6.4f}|mr:{:6.4f}|map50:{:6.4f}|map:{:6.4f}"
-              .format(epoch + 1,
-                      self.local_rank,
-                      mp * 100,
-                      mr * 100,
-                      map50 * 100,
-                      map * 100))
+        mp = reduce_sum(torch.tensor(mp, device=self.device)).item() / self.gpu_num
+        mr = reduce_sum(torch.tensor(mr, device=self.device)).item() / self.gpu_num
+        map50 = reduce_sum(torch.tensor(map50, device=self.device)).item() / self.gpu_num
+        map = reduce_sum(torch.tensor(map, device=self.device)).item() / self.gpu_num
+        if self.local_rank == 0:
+            print("epoch: {:2d}|gpu_num:{:d}|mp:{:6.4f}|mr:{:6.4f}|map50:{:6.4f}|map:{:6.4f}"
+                  .format(epoch + 1,
+                          self.gpu_num,
+                          mp * 100,
+                          mr * 100,
+                          map50 * 100,
+                          map * 100))
         last_weight_path = os.path.join(self.val_cfg['weight_path'],
                                         "{:s}_last.pth"
                                         .format(self.cfg['model_name']))

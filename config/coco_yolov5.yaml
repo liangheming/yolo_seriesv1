@@ -1,4 +1,4 @@
-model_name: coco_yolov5
+model_name: coco_yolov5l
 data:
   train_annotation_path: /home/huffman/data/annotations/instances_train2017.json
 #  train_annotation_path: /home/huffman/data/annotations/instances_val2017.json
@@ -7,10 +7,10 @@ data:
 #  train_img_root: /home/huffman/data/val2017
   val_img_root: /home/huffman/data/val2017
   img_size: 640
-  batch_size: 20
+  batch_size: 16
   num_workers: 8
   debug: False
-  remove_blank: False
+  remove_blank: True
   use_crowd: False
 
 model:
@@ -19,7 +19,7 @@ model:
             [30, 61, 62, 45, 59, 119],
             [116, 90, 156, 198, 373, 326]]
   strides: [8, 16, 32]
-  scale_name: m
+  scale_name: l
   freeze_bn: False
 
 hyper_params:
@@ -42,4 +42,4 @@ val:
   conf_thresh: 0.001
   iou_thresh: 0.6
   max_det: 300
-gpus: 4,5
+gpus: 0,1,2,3

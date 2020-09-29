@@ -107,3 +107,10 @@ def fuse_conv_and_bn(conv, bn):
         fusedconv.bias.copy_(torch.mm(w_bn, b_conv.reshape(-1, 1)).reshape(-1) + b_bn)
 
         return fusedconv
+
+
+def reduce_sum(tensor):
+    import torch.distributed as dist
+    tensor = tensor.clone()
+    dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
+    return tensor
